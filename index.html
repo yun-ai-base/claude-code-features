@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 功能手册</title>
+<style>
+  /* ============ Reset & Base ============ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+    background: #f8f9fa;
+    color: #1a1a2e;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  ::selection { background: rgba(99,102,241,0.15); }
+
+  /* ============ Header ============ */
+  .app-header {
+    background: #fff;
+    border-bottom: 1px solid #e8eaed;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 32px 20px;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .app-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a1a2e;
+    letter-spacing: -0.3px;
+  }
+  .header-sub {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+    margin-left: 44px;
+  }
+  .header-sub .version {
+    font-size: 12px;
+    color: #8b8fa3;
+    background: #f0f1f3;
+    padding: 2px 10px;
+    border-radius: 6px;
+  }
+  .header-sub .update-date {
+    font-size: 12px;
+    color: #8b8fa3;
+  }
+
+  /* ============ Toolbar ============ */
+  .toolbar {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 12px 32px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #b0b3c1;
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border-radius: 10px;
+    border: 1.5px solid #e0e2e8;
+    background: #fff;
+    color: #1a1a2e;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .search-wrap input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  .search-wrap input::placeholder { color: #b0b3c1; }
+
+  .toolbar-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1.5px solid #e0e2e8;
+    background: #fff;
+    color: #4b4f62;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .btn:hover {
+    border-color: #c4c7d0;
+    background: #f8f9fa;
+    color: #1a1a2e;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: #fff;
+  }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover { background: #f0f1f3; border-color: transparent; }
+
+  /* ============ Stats ============ */
+  .stats-bar {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 32px 16px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #8b8fa3;
+  }
+  .stat-item .num {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    letter-spacing: -0.3px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-item .num-accent { color: #6366f1; }
+  .stat-dot { width: 4px; height: 4px; border-radius: 50%; background: #d0d2d9; }
+
+  /* ============ Filters ============ */
+  .filters-wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 32px 4px;
+  }
+  .category-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .category-filters::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #e8eaed;
+    background: #fff;
+    color: #6b6f82;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+    font-weight: 500;
+  }
+  .cat-pill:hover {
+    border-color: #c4c7d0;
+    color: #1a1a2e;
+  }
+  .cat-pill.active {
+    background: rgba(99,102,241,0.06);
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+
+  /* ============ Main ============ */
+  .main-content {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 8px 32px 64px;
+  }
+
+  /* ============ Category Section ============ */
+  .category-section {
+    margin-bottom: 28px;
+  }
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    user-select: none;
+    padding: 0 4px;
+  }
+  .cat-icon-wrap {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .category-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    flex: 1;
+  }
+  .category-header .count-badge {
+    font-size: 11px;
+    color: #8b8fa3;
+    background: #f0f1f3;
+    padding: 1px 10px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .cat-arrow {
+    font-size: 10px;
+    color: #b0b3c1;
+    transition: transform 0.2s ease;
+  }
+  .category-header.collapsed .cat-arrow { transform: rotate(-90deg); }
+  .category-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 10px;
+  }
+  .category-header.collapsed + .category-body { display: none; }
+
+  /* ============ Feature Card ============ */
+  .feature-card {
+    background: #fff;
+    border: 1.5px solid #e8eaed;
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: all 0.2s ease;
+  }
+  .feature-card:hover {
+    border-color: #d0d2d9;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    transform: translateY(-1px);
+  }
+  .feature-card.popular {
+    background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+    border-color: #e4d9f7;
+  }
+  .feature-card.popular:hover {
+    border-color: #cdbcf0;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.06);
+  }
+  .feature-card.popular .card-name::after {
+    content: '常用';
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 600;
+    background: #6366f1;
+    color: #fff;
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+  }
+  .feature-card.popular .card-name code::after {
+    content: '常用';
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 600;
+    background: #6366f1;
+    color: #fff;
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+  }
+  .feature-card .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+  }
+  .badge-new {
+    background: rgba(16,185,129,0.1);
+    color: #059669;
+    border: 1px solid rgba(16,185,129,0.15);
+  }
+  .badge-beta {
+    background: rgba(245,158,11,0.1);
+    color: #d97706;
+    border: 1px solid rgba(245,158,11,0.15);
+  }
+  .badge-stable {
+    display: none !important;
+  }
+
+  .feature-card .card-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 5px;
+    line-height: 1.3;
+  }
+  .feature-card .card-name code {
+    font-family: 'SF Mono', 'SFMono-Regular', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6366f1;
+    background: rgba(99,102,241,0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .feature-card .card-desc {
+    font-size: 13px;
+    color: #6b6f82;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .meta-row {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    align-items: flex-start;
+    line-height: 1.4;
+  }
+  .meta-row .label {
+    color: #b0b3c1;
+    min-width: 44px;
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+  .meta-row .value {
+    color: #4b4f62;
+  }
+  .meta-row .value code {
+    font-family: 'SF Mono', 'SFMono-Regular', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 11px;
+    background: #f0f1f3;
+    padding: 1px 7px;
+    border-radius: 4px;
+    color: #4b4f62;
+    word-break: break-all;
+  }
+  .card-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f1f3;
+  }
+  .card-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #f0f1f3;
+    color: #8b8fa3;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+
+  /* ============ Modal ============ */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 540px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 2px;
+  }
+  .modal .modal-sub {
+    font-size: 13px;
+    color: #8b8fa3;
+    margin-bottom: 20px;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    color: #6b6f82;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .form-group label .req { color: #ef4444; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #e0e2e8;
+    background: #fff;
+    color: #1a1a2e;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  .form-group textarea { resize: vertical; min-height: 52px; }
+  .form-group select { cursor: pointer; }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f1f3;
+  }
+
+  /* ============ JSON ============ */
+  .json-editor {
+    width: 100%;
+    min-height: 320px;
+    font-family: 'SF Mono', 'SFMono-Regular', 'Fira Code', monospace;
+    font-size: 12px;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1.5px solid #e0e2e8;
+    background: #f8f9fa;
+    color: #1a1a2e;
+    resize: vertical;
+    outline: none;
+    tab-size: 2;
+    line-height: 1.6;
+  }
+  .json-editor:focus { border-color: #6366f1; }
+
+  /* ============ Toast ============ */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    transform: translateY(16px);
+    opacity: 0;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: #10b981; color: #fff; }
+  .toast.error { background: #ef4444; color: #fff; }
+  .toast.info { background: #6366f1; color: #fff; }
+
+  /* ============ Empty ============ */
+  .empty-state {
+    text-align: center;
+    padding: 64px 20px;
+    color: #b0b3c1;
+    grid-column: 1 / -1;
+  }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.6; }
+  .empty-state p { font-size: 14px; }
+
+  /* ============ Responsive ============ */
+  @media (max-width: 768px) {
+    .header-inner { padding: 20px 20px 16px; }
+    .header-sub { margin-left: 0; }
+    .toolbar { padding: 10px 20px; }
+    .stats-bar { padding: 0 20px 12px; gap: 14px; }
+    .filters-wrap { padding: 0 20px 4px; }
+    .main-content { padding: 4px 20px 48px; }
+    .category-body { grid-template-columns: 1fr; }
+    .btn span { display: none; }
+    .modal { padding: 20px; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-bar .stat-dot { display: none; }
+    .stats-bar { gap: 10px; }
+    .stat-item .num { font-size: 15px; }
+  }
+
+  /* ============ Animation ============ */
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .category-body .feature-card {
+    animation: cardIn 0.25s ease-out both;
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="logo-mark">CC</div>
+      <h1>Claude Code 功能手册</h1>
+    </div>
+    <div class="header-sub">
+      <span class="version">v2.1.218</span>
+      <span class="update-date">2026 年 7 月</span>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">&#x1F50D;</span>
+    <input type="text" id="searchInput" placeholder="搜索功能名称、场景、标签..." oninput="render()">
+  </div>
+  <div class="toolbar-actions">
+    <button class="btn" onclick="showAddModal()">+ 添加</button>
+    <button class="btn btn-ghost" onclick="showJsonModal()">{ } JSON</button>
+    <button class="btn btn-ghost" onclick="exportJson()">导出</button>
+  </div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="filters-wrap">
+  <div class="category-filters" id="categoryFilters"></div>
+</div>
+
+<main class="main-content" id="featureContainer"></main>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>添加新功能</h3>
+    <p class="modal-sub">新增功能会保存到浏览器本地存储</p>
+    <div class="form-group">
+      <label>功能名称 <span class="req">*</span></label>
+      <input id="fName" placeholder="如: /deep-research">
+    </div>
+    <div class="form-group">
+      <label>分类 <span class="req">*</span></label>
+      <select id="fCategory">
+        <option value="模型">模型</option>
+        <option value="命令">命令</option>
+        <option value="Auto 模式">Auto 模式</option>
+        <option value="子 Agent / 工作流">子 Agent / 工作流</option>
+        <option value="Artifacts">Artifacts</option>
+        <option value="桌面端">桌面端</option>
+        <option value="安全与修复">安全与修复</option>
+        <option value="MCP">MCP</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>简介 <span class="req">*</span></label>
+      <textarea id="fDesc" placeholder="一句话描述功能"></textarea>
+    </div>
+    <div class="form-group">
+      <label>使用方法</label>
+      <input id="fUsage" placeholder="如: /command">
+    </div>
+    <div class="form-group">
+      <label>使用场景</label>
+      <textarea id="fScenario" placeholder="什么情况下用到这个功能"></textarea>
+    </div>
+    <div class="form-group">
+      <label>引入版本</label>
+      <input id="fVersion" placeholder="如: v2.1.150+">
+    </div>
+    <div class="form-group">
+      <label>状态</label>
+      <select id="fStatus">
+        <option value="stable">stable</option>
+        <option value="beta">beta</option>
+        <option value="new">new</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>标签（逗号分隔）</label>
+      <input id="fTags" placeholder="如: model, opus, coding">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addModal')">取消</button>
+      <button class="btn btn-primary" onclick="addFeature()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- JSON Modal -->
+<div class="modal-overlay" id="jsonModal">
+  <div class="modal" style="max-width:720px">
+    <h3>编辑数据源</h3>
+    <p class="modal-sub">编辑底层 JSON 数据，新增字段自动渲染显示</p>
+    <textarea class="json-editor" id="jsonEditor" spellcheck="false"></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('jsonModal')">取消</button>
+      <button class="btn btn-primary" onclick="importJson()">导入并覆盖</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===================================================================
+//  📦 数据源 — 开放性接口
+//  新增字段自动渲染，无需修改代码
+// ===================================================================
+const featureData = [
+  // ════════ 模型 ════════
+  {
+    name: 'Claude Opus 4.8',
+    category: '模型',
+    description: '最新旗舰模型，Max / Team Premium 默认，代码能力全面超越上代',
+    usage: '/config model=opus-4-8',
+    scenario: '复杂编码、大规模重构、高难度算法、深度推理',
+    versionAdded: 'v2.1.150+',
+    status: 'stable',
+    tags: ['model', 'opus', 'coding']
+  },
+  {
+    name: 'Claude Sonnet 5',
+    category: '模型',
+    description: 'Pro / Team Standard 新默认，原生 100 万 token 上下文窗口',
+    usage: '升级后自动成为默认模型',
+    scenario: '日常编码、超大文件处理、超长上下文分析',
+    versionAdded: 'v2.1.195+',
+    status: 'stable',
+    tags: ['model', 'sonnet', 'long-context']
+  },
+  {
+    name: 'Fast Mode',
+    category: '模型',
+    description: 'Opus 模型快速模式，保持推理质量的同时大幅提升响应速度',
+    usage: '/effort 切换或协议自动协商',
+    scenario: '需要 Opus 级别质量但希望更快拿到结果',
+    versionAdded: 'v2.1.150+',
+    status: 'stable',
+    tags: ['model', 'speed', 'performance']
+  },
+
+  // ════════ 命令 ════════
+  {
+    name: '/',
+    category: '命令',
+    description: '列出所有可用斜杠命令及功能说明',
+    usage: '/ 或 /slash',
+    scenario: '想不起某个命令叫什么，或看看有哪些命令可用',
+    versionAdded: 'v1.0',
+    status: 'stable',
+    tags: ['command', 'help', 'discover']
+  },
+  {
+    name: '/help',
+    category: '命令',
+    description: '获取 Claude Code 帮助信息，快速上手',
+    usage: '/help',
+    scenario: '刚接触 Claude Code 或需要查阅基本用法',
+    versionAdded: 'v1.0',
+    status: 'stable',
+    tags: ['command', 'help', 'basics']
+  },
+  {
+    name: '/cd',
+    popular: true,
+    category: '命令',
+    description: '对话中切换工作目录，保留完整上下文缓存',
+    usage: '/cd D:\\applications\\AI_files\\xxx',
+    scenario: '对话到一半需要转到另一个项目目录',
+    versionAdded: 'v2.1.166+',
+    status: 'stable',
+    tags: ['command', 'navigation', 'directory']
+  },
+  {
+    name: '/doctor',
+    popular: true,    category: '命令',
+    description: '一键诊断环境健康，检测修复 skill / MCP / 插件 / 配置问题',
+    usage: '/doctor 或 /checkup',
+    scenario: '遇到诡异错误、怀疑环境配置出问题时首选',
+    versionAdded: 'v2.1.202+',
+    status: 'stable',
+    tags: ['command', 'diagnostic', 'troubleshoot']
+  },
+  {
+    name: '/fork',
+    popular: true,
+    category: '命令',
+    description: '把当前对话复制到后台新会话，原会话继续工作互不干扰',
+    usage: '/fork',
+    scenario: '想在当前进度上开分支探索新方向',
+    versionAdded: 'v2.1.207+',
+    status: 'stable',
+    tags: ['command', 'session', 'parallel']
+  },
+  {
+    name: '/goal',
+    popular: true,
+    category: '命令',
+    description: '设定目标后 Claude 跨轮持续推进直到条件满足',
+    usage: '/goal 完成这个仪表盘的所有功能',
+    scenario: '需要 Claude 自主推进多步骤任务，无需每步确认',
+    versionAdded: 'v2.1.139+',
+    status: 'stable',
+    tags: ['command', 'automation', 'persistent']
+  },
+  {
+    name: '/usage',
+    popular: true,    category: '命令',
+    description: '查看 skill / subagent / plugin / MCP 的资源消耗明细',
+    usage: '/usage',
+    scenario: '想知道本轮对话各组件用了多少配额或 token',
+    versionAdded: 'v2.1.143+',
+    status: 'stable',
+    tags: ['command', 'monitor', 'quota']
+  },
+  {
+    name: '/code-review',
+    popular: true,
+    category: '命令',
+    description: '后台审查代码正确性 bug，新版支持子 Agent 后台运行不占上下文',
+    usage: '/code-review',
+    scenario: '完成编码后让 Claude 在后台做一次全面审查',
+    versionAdded: 'v2.1.143+',
+    status: 'stable',
+    tags: ['command', 'review', 'quality']
+  },
+  {
+    name: '/ultrareview',
+    category: '命令',
+    description: '启动云端集群审查，多个 bug 查找 agent 并行分析',
+    usage: '/ultrareview 审查我的认证模块',
+    scenario: '重要代码合并前做深度安全审查',
+    versionAdded: 'v2.1.114+',
+    status: 'beta',
+    tags: ['command', 'review', 'security', 'cloud']
+  },
+  {
+    name: '/config',
+    popular: true,
+    category: '命令',
+    description: '对话中读写配置项，无需手改配置文件',
+    usage: '/config model=sonnet',
+    scenario: '快速切换模型、调整行为参数',
+    versionAdded: 'v2.1.178+',
+    status: 'stable',
+    tags: ['command', 'settings', 'config']
+  },
+  {
+    name: '/loop',
+    category: '命令',
+    description: '按指定间隔重复执行命令，适合持续监控轮询',
+    usage: '/loop 5m /doctor',
+    scenario: '监控部署状态、周期性检查任务进度',
+    versionAdded: 'v2.1.71+',
+    status: 'stable',
+    tags: ['command', 'timer', 'repeat']
+  },
+  {
+    name: '/effort xhigh',
+    category: '命令',
+    description: '最高努力级别，投入最大算力处理最难任务',
+    usage: '/effort xhigh',
+    scenario: '极端复杂的算法、架构设计、大规模重构',
+    versionAdded: 'v2.1.150+',
+    status: 'stable',
+    tags: ['command', 'effort', 'max-power']
+  },
+  {
+    name: '/rewind',
+    popular: true,
+    category: '命令',
+    description: '回退到指定历史节点，新版支持回退到 /clear 之前的状态',
+    usage: '/rewind',
+    scenario: '对话方向跑偏，想回到某个分支点重来',
+    versionAdded: 'v2.1.185+',
+    status: 'stable',
+    tags: ['command', 'undo', 'history']
+  },
+  {
+    name: '/radio',
+    category: '命令',
+    description: '播放 Claude FM lo-fi 背景音乐',
+    usage: '/radio',
+    scenario: '专注编码时来点不打扰的白噪音背景音乐',
+    versionAdded: 'v2.1.195+',
+    status: 'stable',
+    tags: ['command', 'fun', 'music']
+  },
+  {
+    name: '/plugin list',
+    category: '命令',
+    description: '列出当前已安装的所有插件及其运行状态',
+    usage: '/plugin list',
+    scenario: '管理插件、排查插件冲突',
+    versionAdded: 'v2.1.158+',
+    status: 'stable',
+    tags: ['command', 'plugin', 'manage']
+  },
+  {
+    name: '/clear',
+    popular: true,
+    category: '命令',
+    description: '清空对话上下文，重新开始新一轮',
+    usage: '/clear',
+    scenario: '对话累积太多需要从头来过',
+    versionAdded: 'v1.0',
+    status: 'stable',
+    tags: ['command', 'clear', 'reset']
+  },
+  {
+    name: '/compact',
+    popular: true,
+    category: '命令',
+    description: '压缩对话上下文释放空间，智能保留关键信息',
+    usage: '/compact',
+    scenario: '对话太长接近上限时压缩续命',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'compress', 'context']
+  },
+  {
+    name: '/resume',
+    popular: true,
+    category: '命令',
+    description: '恢复之前保存或后台运行的对话',
+    usage: '/resume',
+    scenario: '回到之前没做完的任务，或切换到后台会话',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'session', 'resume']
+  },
+  {
+    name: '/model',
+    popular: true,
+    category: '命令',
+    description: '切换当前对话使用的模型',
+    usage: '/model opus-4-8',
+    scenario: '需要更强推理或更快响应时灵活切换',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'model', 'switch']
+  },
+  {
+    name: '/effort',
+    popular: true,
+    category: '命令',
+    description: '设置努力级别：low / medium / high / xhigh',
+    usage: '/effort high',
+    scenario: '按任务难度分配算力，简单任务 low 省 token',
+    versionAdded: 'v2.1.72+',
+    status: 'stable',
+    tags: ['command', 'effort', 'level']
+  },
+  {
+    name: '/mcp',
+    popular: true,
+    category: '命令',
+    description: '管理 MCP 服务器，查看连接状态和错误详情',
+    usage: '/mcp',
+    scenario: '查看 MCP 连接状态、诊断连接失败原因',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'mcp', 'connect']
+  },
+  {
+    name: '/context',
+    popular: true,
+    category: '命令',
+    description: '查看当前上下文使用情况：token 数量和内容摘要',
+    usage: '/context',
+    scenario: '想知道本轮用了多少 token 是否需要压缩',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'context', 'tokens']
+  },
+  {
+    name: '/status',
+    popular: true,
+    category: '命令',
+    description: '显示当前会话状态：模型、工作目录、运行模式等',
+    usage: '/status',
+    scenario: '快速确认当前用什么模型在哪个目录',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'status', 'info']
+  },
+  {
+    name: '/theme',
+    category: '命令',
+    description: '切换或自定义 Claude Code 主题配色',
+    usage: '/theme',
+    scenario: '调整终端颜色，打造个人喜好的编码环境',
+    versionAdded: 'v2.1.114+',
+    status: 'stable',
+    tags: ['command', 'theme', 'customize']
+  },
+  {
+    name: '/keybindings',
+    category: '命令',
+    description: '自定义键盘快捷键和和弦绑定',
+    usage: '/keybindings',
+    scenario: '把常用操作绑定为快捷键，提升操作效率',
+    versionAdded: 'v2.1.18+',
+    status: 'stable',
+    tags: ['command', 'shortcut', 'keyboard']
+  },
+  {
+    name: '/memory',
+    popular: true,
+    category: '命令',
+    description: '管理 auto-memory：查看、编辑、删除记忆',
+    usage: '/memory',
+    scenario: '查看 Claude 记住了什么，或手动添加重要上下文',
+    versionAdded: 'v2.1.59+',
+    status: 'stable',
+    tags: ['command', 'memory', 'persist']
+  },
+  {
+    name: '/copy',
+    category: '命令',
+    description: '复制对话内容到系统剪贴板',
+    usage: '/copy',
+    scenario: '需要把对话结果粘贴到其他应用',
+    versionAdded: 'v2.1.59+',
+    status: 'stable',
+    tags: ['command', 'copy', 'clipboard']
+  },
+  {
+    name: '/init',
+    popular: true,
+    category: '命令',
+    description: '初始化或更新当前项目的 CLAUDE.md 配置文件',
+    usage: '/init',
+    scenario: '新项目首次设置，让 Claude 了解项目结构和规则',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'init', 'config']
+  },
+  {
+    name: '/review',
+    popular: true,
+    category: '命令',
+    description: '审查 GitHub Pull Request',
+    usage: '/review <pr-url>',
+    scenario: '收到 PR 链接直接让 Claude 审查分析',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'review', 'pr', 'github']
+  },
+  {
+    name: '/autofix-pr',
+    category: '命令',
+    description: '自动修复 PR 中的问题并提修复 commit',
+    usage: '/autofix-pr <pr-url>',
+    scenario: 'PR 审查发现简单问题后一键自动修复',
+    versionAdded: 'v2.1.92+',
+    status: 'stable',
+    tags: ['command', 'pr', 'autofix']
+  },
+  {
+    name: '/commit',
+    popular: true,
+    category: '命令',
+    description: '创建 git commit，自动生成规范的提交信息',
+    usage: '/commit',
+    scenario: '完成代码修改后快速提交，不用手写 commit message',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'git', 'commit']
+  },
+  {
+    name: '/allow',
+    popular: true,
+    category: '命令',
+    description: '将工具调用加入允许列表，减少权限弹窗',
+    usage: '/allow',
+    scenario: '某类操作频繁确认时加入白名单省事',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'permission', 'allow']
+  },
+  {
+    name: '/deny',
+    popular: true,
+    category: '命令',
+    description: '设置拒绝规则，禁止 Claude 执行某些操作',
+    usage: '/deny',
+    scenario: '限制 Claude 访问敏感目录或执行危险命令',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'permission', 'deny']
+  },
+  {
+    name: '/deep-research',
+    popular: true,
+    category: '命令',
+    description: '深度研究模式，Claude 自主搜索分析多个来源',
+    usage: '/deep-research "研究问题"',
+    scenario: '全面调研某个技术课题或行业趋势',
+    versionAdded: 'v2.1.100+',
+    status: 'stable',
+    tags: ['command', 'research', 'explore']
+  },
+  {
+    name: '/summarize',
+    category: '命令',
+    description: '总结当前对话的关键要点',
+    usage: '/summarize',
+    scenario: '对话太长需要快速回顾核心内容',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'summarize', 'recap']
+  },
+  {
+    name: '/diff',
+    popular: true,
+    category: '命令',
+    description: '查看 Claude 做出的所有文件改动',
+    usage: '/diff',
+    scenario: 'Claude 改完代码后想逐文件审查改动内容',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'diff', 'changes']
+  },
+  {
+    name: '/pr',
+    popular: true,
+    category: '命令',
+    description: '基于当前改动快速创建 Pull Request',
+    usage: '/pr',
+    scenario: '功能完成准备提 PR 的完整流程',
+    versionAdded: 'v2.0+',
+    status: 'stable',
+    tags: ['command', 'pr', 'github', 'publish']
+  },
+
+  // ════════ Auto 模式 ════════
+  {
+    name: 'Auto 模式 (Pro)',
+    category: 'Auto 模式',
+    description: 'Pro 计划也能使用 Auto 模式，大幅减少权限确认弹窗',
+    usage: '自动启用（Pro / Team / Max 均支持）',
+    scenario: '日常开发中减少手动确认，让 Claude 自主执行',
+    versionAdded: 'v2.1.143+',
+    status: 'stable',
+    tags: ['auto', 'permission', 'productivity']
+  },
+  {
+    name: 'Auto 云平台支持',
+    category: 'Auto 模式',
+    description: 'AWS Bedrock / Google Vertex AI / Microsoft Foundry 上无需 opt-in',
+    usage: '这些云平台上自动生效',
+    scenario: '企业用户通过云平台使用 Claude Code',
+    versionAdded: 'v2.1.158+',
+    status: 'stable',
+    tags: ['auto', 'cloud', 'enterprise']
+  },
+  {
+    name: 'Auto 安全守卫',
+    category: 'Auto 模式',
+    description: '危险 rm -rf 拦截、可疑路径检查，由分类器裁决而非弹窗打扰',
+    usage: '自动生效，零配置',
+    scenario: '防止误操作删文件或访问危险路径',
+    versionAdded: 'v2.1.202+',
+    status: 'stable',
+    tags: ['auto', 'safety', 'protection']
+  },
+  {
+    name: 'Plan + Auto 联动',
+    category: 'Auto 模式',
+    description: 'Plan 模式下只读命令走静态分析，不确认的由分类器智能裁决',
+    usage: 'Plan 模式下自动生效',
+    scenario: '规划阶段执行安全命令时减少确认弹窗',
+    versionAdded: 'v2.1.218',
+    status: 'new',
+    tags: ['auto', 'plan', 'intelligence']
+  },
+
+  // ════════ 子 Agent / 工作流 ════════
+  {
+    name: '子 Agent 后台执行',
+    category: '子 Agent / 工作流',
+    description: '子 Agent 默认后台运行，不占用主会话上下文',
+    usage: '自动生效，子 Agent 在后台静默工作',
+    scenario: '并行执行多个独立任务互不干扰',
+    versionAdded: 'v2.1.195+',
+    status: 'stable',
+    tags: ['agent', 'background', 'parallel']
+  },
+  {
+    name: '子 Agent 嵌套',
+    category: '子 Agent / 工作流',
+    description: '子 Agent 可以递归创建子 Agent，最多 5 层深度',
+    usage: '自动支持无需额外配置',
+    scenario: '分层分解复杂任务：主任务拆子任务，子任务再细分',
+    versionAdded: 'v2.1.166+',
+    status: 'stable',
+    tags: ['agent', 'nested', 'hierarchy']
+  },
+  {
+    name: '动态工作流',
+    category: '子 Agent / 工作流',
+    description: 'Claude 编写编排脚本协调数十到数百个子 Agent 协同',
+    usage: '处理大规模任务时自动启用',
+    scenario: '超大重构、全量测试、代码库级分析',
+    versionAdded: 'v2.1.150+',
+    status: 'beta',
+    tags: ['agent', 'orchestration', 'scale']
+  },
+  {
+    name: 'Agent View',
+    category: '子 Agent / 工作流',
+    description: '统一面板查看所有运行中 / 阻塞 / 完成的 agent 状态',
+    usage: 'claude agents',
+    scenario: '同时跑多个后台任务时统一监控进度',
+    versionAdded: 'v2.1.139+',
+    status: 'stable',
+    tags: ['agent', 'dashboard', 'monitor']
+  },
+
+  // ════════ Artifacts ════════
+  {
+    name: 'Artifacts 正式版',
+    category: 'Artifacts',
+    description: '将对话输出变为可分享的实时交互页面，Pro / Max 计划包含',
+    usage: '对话中 Claude 自动创建 Artifact',
+    scenario: '需要将代码或文档输出为独立可交互页面',
+    versionAdded: 'v2.1.195+',
+    status: 'stable',
+    tags: ['artifact', 'preview', 'share']
+  },
+  {
+    name: 'Artifact MCP 连接',
+    category: 'Artifacts',
+    description: 'Artifact 可通过查看者的 MCP 连接器拉取实时数据',
+    usage: '创建 Artifact 时自动支持 MCP 数据源',
+    scenario: 'Artifact 需要展示动态数据而非静态快照',
+    versionAdded: 'v2.1.207+',
+    status: 'new',
+    tags: ['artifact', 'mcp', 'live-data']
+  },
+  {
+    name: 'Artifact 公开分享',
+    category: 'Artifacts',
+    description: '生成公开链接分享 Artifact，任何人可查看',
+    usage: 'Artifact 界面点击分享按钮生成链接',
+    scenario: '把成果发给未使用 Claude 的同事或朋友',
+    versionAdded: 'v2.1.207+',
+    status: 'new',
+    tags: ['artifact', 'share', 'link']
+  },
+
+  // ════════ 桌面端 ════════
+  {
+    name: '内置浏览器',
+    category: '桌面端',
+    description: 'Claude 可在桌面版内浏览网页、点击交互，沙箱隔离',
+    usage: '桌面版内置，Claude 根据需求自动调用',
+    scenario: 'Claude 需要查阅文档或操作 Web 应用',
+    versionAdded: 'v2.1.202+',
+    status: 'new',
+    tags: ['desktop', 'browser', 'sandbox']
+  },
+  {
+    name: '屏幕阅读器模式',
+    category: '桌面端',
+    description: '纯文本线性终端替代图形界面，VoiceOver / NVDA 友好',
+    usage: 'claude --ax-screen-reader',
+    scenario: '视障用户使用，或偏好纯文本界面',
+    versionAdded: 'v2.1.207+',
+    status: 'new',
+    tags: ['accessibility', 'screen-reader']
+  },
+  {
+    name: 'Chrome 集成',
+    category: '桌面端',
+    description: '通过 Chrome 浏览器使用 Claude Code 全部功能',
+    usage: 'Chrome 中登录 Claude 即可',
+    scenario: '不想安装桌面端，浏览器完成全部操作',
+    versionAdded: 'v2.1.195+',
+    status: 'stable',
+    tags: ['desktop', 'chrome', 'browser']
+  },
+  {
+    name: 'Linux 桌面 (Beta)',
+    category: '桌面端',
+    description: 'Ubuntu 22.04+ / Debian 12+，x86_64 + arm64 架构',
+    usage: 'Linux 系统安装桌面版客户端',
+    scenario: 'Linux 用户获得完整桌面端体验',
+    versionAdded: 'v2.1.195+',
+    status: 'beta',
+    tags: ['linux', 'ubuntu', 'debian']
+  },
+
+  // ════════ 安全与修复 ════════
+  {
+    name: 'Shell 注入修复',
+    category: '安全与修复',
+    description: '${user_config.*} 在插件 hook 中被拒绝执行',
+    usage: '自动生效',
+    scenario: '使用第三方插件时的关键安全防护',
+    versionAdded: 'v2.1.207',
+    status: 'stable',
+    tags: ['security', 'injection', 'fix']
+  },
+  {
+    name: 'Windows 路径编码修复',
+    category: '安全与修复',
+    description: '含 \\u 前缀的路径不再被错误转义为 CJK 字符',
+    usage: '自动生效',
+    scenario: 'Windows 用户日常使用路径保持正确',
+    versionAdded: 'v2.1.218',
+    status: 'new',
+    tags: ['windows', 'encoding', 'fix']
+  },
+  {
+    name: '终端性能修复',
+    category: '安全与修复',
+    description: '流式输出长列表、表格、代码块不再导致终端卡死',
+    usage: '自动生效',
+    scenario: '处理大量输出时终端保持流畅',
+    versionAdded: 'v2.1.207',
+    status: 'stable',
+    tags: ['performance', 'terminal', 'fix']
+  },
+  {
+    name: '会话恢复稳定性',
+    category: '安全与修复',
+    description: '损坏的 delta 附件不再导致会话恢复崩溃',
+    usage: '自动生效',
+    scenario: '恢复长时间对话时更加稳定',
+    versionAdded: 'v2.1.218',
+    status: 'new',
+    tags: ['stability', 'session', 'fix']
+  },
+
+  // ════════ MCP ════════
+  {
+    name: 'MCP Login',
+    category: 'MCP',
+    description: '从命令行直接认证 MCP 服务器',
+    usage: 'claude mcp login',
+    scenario: '首次连接需要认证的 MCP 服务',
+    versionAdded: 'v2.1.185+',
+    status: 'stable',
+    tags: ['mcp', 'auth', 'login']
+  },
+  {
+    name: 'MCP 连接诊断',
+    category: 'MCP',
+    description: '显示 HTTP 状态码和错误详情，标示配置中的隐藏空格',
+    usage: 'claude mcp list 或 /mcp',
+    scenario: 'MCP 服务器连不上时快速定位根因',
+    versionAdded: 'v2.1.218',
+    status: 'new',
+    tags: ['mcp', 'debug', 'diagnostic']
+  },
+
+  // ════════ 其他 ════════
+  {
+    name: 'Shell 模式',
+    category: '其他',
+    description: '! 执行命令后 Claude 自动分析并解释输出',
+    usage: '! npm test 然后 Claude 自动解读结果',
+    scenario: '跑完命令不想自己翻日志，让 Claude 直接告诉你',
+    versionAdded: 'v2.1.185+',
+    status: 'stable',
+    tags: ['shell', 'explain', 'output']
+  },
+  {
+    name: '--safe-mode',
+    category: '其他',
+    description: '禁用所有自定义项启动，隔离排查问题',
+    usage: 'claude --safe-mode',
+    scenario: '怀疑 skill 或插件导致异常时纯净启动',
+    versionAdded: 'v2.1.166+',
+    status: 'stable',
+    tags: ['troubleshoot', 'safe', 'mode']
+  },
+  {
+    name: 'fallbackModel',
+    category: '其他',
+    description: '配置最多 3 个备用模型，主模型不可用时自动降级',
+    usage: 'settings.json 配置 fallbackModel 数组',
+    scenario: '主模型过载或服务不可用时无缝切换',
+    versionAdded: 'v2.1.166+',
+    status: 'stable',
+    tags: ['config', 'reliability', 'fallback']
+  },
+  {
+    name: '背景 Agent 自动升级',
+    category: '其他',
+    description: 'Claude Code 更新后自动升级已在后台运行的 agent',
+    usage: '自动生效',
+    scenario: '后台挂着长时间任务时升级不影响已有 agent',
+    versionAdded: 'v2.1.202+',
+    status: 'stable',
+    tags: ['agent', 'upgrade', 'background']
+  },
+  {
+    name: 'Editor 角色',
+    category: '其他',
+    description: 'Team / Enterprise 计划支持 Editor 角色，团队协作',
+    usage: '在团队设置中分配 Editor 权限',
+    scenario: '多人团队协作使用 Claude Code',
+    versionAdded: 'v2.1.207+',
+    status: 'new',
+    tags: ['team', 'role', 'collaboration']
+  }
+];
+
+// ===================================================================
+//  🏗️ 分类视觉配置
+// ===================================================================
+const categoryConfig = {
+  '模型':            { icon: '&#x1F916;', color: '#8b5cf6', bg: '#f5f3ff' },
+  '命令':            { icon: '&#x2328;',  color: '#6366f1', bg: '#eef2ff' },
+  'Auto 模式':       { icon: '&#x26A1;',  color: '#f59e0b', bg: '#fffbeb' },
+  '子 Agent / 工作流': { icon: '&#x1F465;', color: '#10b981', bg: '#ecfdf5' },
+  'Artifacts':       { icon: '&#x1F4E6;', color: '#f97316', bg: '#fff7ed' },
+  '桌面端':           { icon: '&#x1F5A5;', color: '#06b6d4', bg: '#ecfeff' },
+  '安全与修复':       { icon: '&#x1F6E1;', color: '#ef4444', bg: '#fef2f2' },
+  'MCP':             { icon: '&#x1F517;', color: '#ec4899', bg: '#fdf2f8' },
+  '其他':            { icon: '&#x1F4C1;', color: '#6b7280', bg: '#f9fafb' }
+};
+
+let customFeatures = [];
+
+// ===================================================================
+//  Render
+// ===================================================================
+function getAll() {
+  try {
+    const saved = localStorage.getItem('cc_custom_features');
+    if (saved) customFeatures = JSON.parse(saved);
+  } catch(e) {}
+  return [...featureData, ...customFeatures];
+}
+
+function render() {
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  const activeCat = document.querySelector('.cat-pill.active')?.dataset?.cat || 'all';
+  const all = getAll();
+
+  let filtered = all.filter(f => {
+    if (activeCat !== 'all' && f.category !== activeCat) return false;
+    if (!search) return true;
+    const haystack = [f.name, f.description, f.scenario, f.usage, ...(f.tags || [])].join(' ').toLowerCase();
+    return haystack.includes(search);
+  });
+
+  const grouped = {};
+  filtered.forEach(f => {
+    const cat = f.category || '未分类';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(f);
+  });
+
+  const totalCustom = customFeatures.length;
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-item"><span class="num">${all.length}</span> 项功能${totalCustom ? ` <span style="color:#8b8fa3;font-size:12px;font-weight:400">(+${totalCustom} 自定义)</span>` : ''}</div>
+    <div class="stat-dot"></div>
+    <div class="stat-item"><span class="num ${activeCat !== 'all' ? 'num-accent' : ''}">${filtered.length}</span> 当前筛选</div>
+    <div class="stat-dot"></div>
+    <div class="stat-item"><span class="num">${Object.keys(grouped).length}</span> 个分类</div>
+  `;
+
+  const allCats = [...new Set(all.map(f => f.category || '未分类'))];
+  const totalInCat = cat => all.filter(f => (f.category || '未分类') === cat).length;
+  document.getElementById('categoryFilters').innerHTML =
+    `<button class="cat-pill ${activeCat === 'all' ? 'active' : ''}" data-cat="all" onclick="setCat('all')">全部 <span style="color:#b0b3c1;font-size:11px;margin-left:3px">${all.length}</span></button>` +
+    allCats.map(c =>
+      `<button class="cat-pill ${activeCat === c ? 'active' : ''}" data-cat="${c}" onclick="setCat('${c}')">${c} <span style="color:#b0b3c1;font-size:11px;margin-left:3px">${totalInCat(c)}</span></button>`
+    ).join('');
+
+  const container = document.getElementById('featureContainer');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F50D;</div><p>没有匹配的功能，试试其他关键词</p></div>';
+    return;
+  }
+
+  let idx = 0;
+  container.innerHTML = Object.entries(grouped).map(([cat, features]) => {
+    const cfg = categoryConfig[cat] || { icon: '&#x1F4CB;', color: '#6b7280', bg: '#f9fafb' };
+    return `
+      <div class="category-section">
+        <div class="category-header" onclick="toggleCat(this)">
+          <div class="cat-icon-wrap" style="background:${cfg.bg};color:${cfg.color}">${cfg.icon}</div>
+          <h2>${cat}</h2>
+          <span class="count-badge">${features.length}</span>
+          <span class="cat-arrow">&#x25BC;</span>
+        </div>
+        <div class="category-body">
+          ${features.map(f => { idx++; return card(f, idx); }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function card(f, idx) {
+  const statusClass = f.status === 'new' ? 'badge-new' : f.status === 'beta' ? 'badge-beta' : 'badge-stable';
+  const statusLabel = f.status === 'new' ? 'NEW' : f.status === 'beta' ? 'BETA' : '';
+  const core = new Set(['name','category','description','usage','scenario','versionAdded','status','tags','link','_custom']);
+  const extra = Object.entries(f).filter(([k]) => !core.has(k));
+
+  return `
+    <div class="feature-card${f.popular ? ' popular' : ''}" style="animation-delay:${(idx % 30) * 25}ms">
+      ${statusLabel ? `<span class="badge ${statusClass}">${statusLabel}</span>` : ''}
+      <div class="card-name">${f.name.startsWith('/') ? `<code>${esc(f.name)}</code>` : esc(f.name)}</div>
+      <div class="card-desc">${esc(f.description || '')}</div>
+      <div class="card-meta">
+        ${f.usage ? `<div class="meta-row"><span class="label">用法</span><span class="value"><code>${esc(f.usage)}</code></span></div>` : ''}
+        ${f.scenario ? `<div class="meta-row"><span class="label">场景</span><span class="value">${esc(f.scenario)}</span></div>` : ''}
+        ${f.versionAdded ? `<div class="meta-row"><span class="label">版本</span><span class="value">${esc(f.versionAdded)}</span></div>` : ''}
+        ${extra.map(([k,v]) => `<div class="meta-row"><span class="label">${esc(k)}</span><span class="value">${esc(String(v))}</span></div>`).join('')}
+      </div>
+      ${f.tags?.length ? `<div class="card-tags">${f.tags.map(t => `<span class="card-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+    </div>
+  `;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function setCat(cat) {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.toggle('active', p.dataset.cat === cat));
+  render();
+}
+
+function toggleCat(h) {
+  h.classList.toggle('collapsed');
+}
+
+// ===================================================================
+//  CRUD
+// ===================================================================
+function showAddModal() { document.getElementById('addModal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function addFeature() {
+  const name = document.getElementById('fName').value.trim();
+  if (!name) { toast('请输入功能名称', 'error'); return; }
+  const tags = document.getElementById('fTags').value.trim();
+  const feature = {
+    name,
+    category: document.getElementById('fCategory').value,
+    description: document.getElementById('fDesc').value.trim(),
+    usage: document.getElementById('fUsage').value.trim(),
+    scenario: document.getElementById('fScenario').value.trim(),
+    versionAdded: document.getElementById('fVersion').value.trim(),
+    status: document.getElementById('fStatus').value,
+    tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+    _custom: true
+  };
+  customFeatures.push(feature);
+  localStorage.setItem('cc_custom_features', JSON.stringify(customFeatures));
+  closeModal('addModal');
+  ['fName','fDesc','fUsage','fScenario','fVersion','fTags'].forEach(id => document.getElementById(id).value = '');
+  render();
+  toast(`已添加: ${name}`, 'success');
+}
+
+function showJsonModal() {
+  document.getElementById('jsonEditor').value = JSON.stringify(getAll(), null, 2);
+  document.getElementById('jsonModal').classList.add('open');
+}
+
+function exportJson() {
+  const blob = new Blob([JSON.stringify(getAll(), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `claude-code-features-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('JSON 已下载', 'success');
+}
+
+function importJson() {
+  try {
+    const data = JSON.parse(document.getElementById('jsonEditor').value);
+    if (!Array.isArray(data)) throw new Error('必须是数组');
+    data.forEach((item, i) => { if (!item.name) throw new Error(`第 ${i+1} 项缺少 name`); });
+    const builtin = new Set(featureData.map(f => f.name));
+    const nc = data.filter(f => !builtin.has(f.name)).map(f => ({ ...f, _custom: true }));
+    customFeatures = nc;
+    localStorage.setItem('cc_custom_features', JSON.stringify(customFeatures));
+    closeModal('jsonModal');
+    render();
+    toast(`导入成功！内置 ${featureData.length} + 自定义 ${nc.length}`, 'success');
+  } catch(e) {
+    toast('JSON 解析失败: ' + e.message, 'error');
+  }
+}
+
+function toast(msg, type) {
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2500);
+}
+
+// ===================================================================
+//  Init
+// ===================================================================
+document.addEventListener('DOMContentLoaded', render);
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+</script>
+</body>
+</html>
